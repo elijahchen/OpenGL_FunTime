@@ -67,7 +67,7 @@ public class GameRenderer implements GLSurfaceView.Renderer {
         return shader;
     }
 
-    public void checkGlError(String glOperation){
+    public static void checkGlError(String glOperation){
         int error;
         while((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR){
             Log.e(TAG, "checkGlError: " + glOperation + ">> " + error );
