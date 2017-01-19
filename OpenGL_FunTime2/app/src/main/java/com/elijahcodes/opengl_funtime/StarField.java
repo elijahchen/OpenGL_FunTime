@@ -1,15 +1,24 @@
 package com.elijahcodes.opengl_funtime;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
+import android.opengl.GLUtils;
+import android.util.Log;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by me on 1/17/2017.
- *
+ * <p>
  * Starfield class creates a square that takes up the full size of the screen.
  * This will be empty until an image is mapped int this square and create a scrolling starfield.
  */
@@ -28,21 +37,21 @@ public class StarField {
 
     public final String vertexShaderCode =
             "uniform mat4 uMVPMatrix;" +
-            "attribute vec4 vPosition;" +
-            "attribute vec2 TexCoordIn;" +
-            "varying vec2 TextCoordIn;" +
-            "void main() {" +
-            "  gl_position = uMVPMatrix * vPosition;" +
-            "  TexCoordOut = TexCoordIn;" +
-            "}";
+                    "attribute vec4 vPosition;" +
+                    "attribute vec2 TexCoordIn;" +
+                    "varying vec2 TextCoordIn;" +
+                    "void main() {" +
+                    "  gl_position = uMVPMatrix * vPosition;" +
+                    "  TexCoordOut = TexCoordIn;" +
+                    "}";
 
     public final String fragmentShaderCode =
             "precision mediump float;" +
-            "uniform vec4 vColor;" +
-            "uniform sampler2D TexCoordIn" +
-            "varying vec2 TexCoordOut;" +
-            "void main() {" +
-            " gl_FragColor = texture2D(TexCoordInn, vec2(TexCoordOut.x, TexCoordOut.y));";
+                    "uniform vec4 vColor;" +
+                    "uniform sampler2D TexCoordIn" +
+                    "varying vec2 TexCoordOut;" +
+                    "void main() {" +
+                    " gl_FragColor = texture2D(TexCoordInn, vec2(TexCoordOut.x, TexCoordOut.y));";
 
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
@@ -53,6 +62,13 @@ public class StarField {
 
     static final int COORDS_PER_VERTEX = 3;
     private final int vertexStride = COORDS_PER_VERTEX * 4;
+
+    private float texture[] = {
+            -1f, 1f,
+            -1f, -1f,
+            1f, -1f,
+            1f, 1f
+    };
 
     public StarField() {
         ByteBuffer bb = ByteBuffer.allocateDirect(squareCoords.length * 4);
@@ -77,7 +93,7 @@ public class StarField {
         GLES20.glLinkProgram(mProgram);
     }
 
-    public void draw(float[] mvpMatrix, float scroll){
+    public void draw(float[] mvpMatrix, float scroll) {
         GLES20.glUseProgram(mProgram);
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -90,5 +106,38 @@ public class StarField {
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
 
         GLES20.glDisableVertexAttribArray(mPositionHandle);
+    }
+
+    public void loadTexture(int texture, Context context) {
+        InputStream imagestream = context.getResources().openRawResource(texture);
+        Bitmap bitmap = null;
+
+        android.graphics.Matrix flip = new android.graphics.Matrix();
+        flip.postScale(-1f, -1f);
+
+        try {
+            bitmap = BitmapFactory.decodeStream(imagestream);
+        } catch (Exception e) {
+            Log.d(TAG, "loadTexture: failed to load");
+        } finally {
+            try {
+                imagestream.close();
+            } catch (IOException e) {
+                Log.d(TAG, "loadTexture: failed to close imageStream");
+            }
+        }
+
+        GLES20.glGenTextures(1, textures, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
+
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+
+        bitmap.recycle();
     }
 }
