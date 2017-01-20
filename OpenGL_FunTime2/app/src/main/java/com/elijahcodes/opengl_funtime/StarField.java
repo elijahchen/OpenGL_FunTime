@@ -18,10 +18,13 @@ import static android.content.ContentValues.TAG;
 
 /**
  * Created by me on 1/17/2017.
- * <p>
+ *
  * Starfield class creates a square that takes up the full size of the screen.
+ *
  * This will be empty until an image is mapped int this square and create a scrolling starfield.
+ *
  * This class takes an int texture, which is going to be a pointer to a resource in the res folder.
+ *
  */
 
 public class StarField {
@@ -47,18 +50,22 @@ public class StarField {
                     "}";
 
     public final String fragmentShaderCode =
-            "precision mediump float;" +
+            // Actual scrolling of the image will take place here
+           "precision mediump float;" +
                     "uniform vec4 vColor;" +
                     "uniform sampler2D TexCoordIn" +
+                    "uniform float scroll;" +
                     "varying vec2 TexCoordOut;" +
                     "void main() {" +
-                    " gl_FragColor = texture2D(TexCoordInn, vec2(TexCoordOut.x, TexCoordOut.y));";
+                    " gl_FragColor = texture2D(TexCoordInn, " +
+                    "vec2(TexCoordOut.x, TexCoordOut.y + scroll));" +
+                    "}";
 
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
     private final int mProgram;
     private int mPositionHandle;
-//    private int mColorHandle;
+    //    private int mColorHandle;
     private int mMVPMatrixHandle;
 
     static final int COORDS_PER_VERTEX = 3;
@@ -73,7 +80,7 @@ public class StarField {
             1f, 1f
     };
 
-//    private final FloatBuffer textureBuffer;
+    //    private final FloatBuffer textureBuffer;
     static final int textureStride = COORDS_PER_VERTEX * 4;
 
     public StarField() {
@@ -99,8 +106,13 @@ public class StarField {
         GLES20.glLinkProgram(mProgram);
     }
 
-    public void draw(float[] mvpMatrix) {
-        // Binds the texture to the polygon
+    public void draw(float[] mvpMatrix, float scroll) {
+        /**
+         * Binds the texture to the polygon.
+         * Using glGetUniformLocation() - you can access the scroll variable in the shader and
+         * then assign it a new value by using glUniform1f()
+         */
+
         GLES20.glUseProgram(mProgram);
 
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
@@ -117,7 +129,9 @@ public class StarField {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
 
         int fsTexture = GLES20.glGetUniformLocation(mProgram, "TexCoordOut");
+        int fsScroll = GLES20.glGetUniformLocation(mProgram, "scroll");
         GLES20.glUniform1i(fsTexture, 0);
+        GLES20.glUniform1f(fsScroll, scroll);
 
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         GameRenderer.checkGlError("glGetUniformLocation");
