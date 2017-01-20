@@ -58,17 +58,66 @@ public class StarField {
     private final ShortBuffer drawListBuffer;
     private final int mProgram;
     private int mPositionHandle;
-    private int mColorHandle;
+//    private int mColorHandle;
     private int mMVPMatrixHandle;
 
     static final int COORDS_PER_VERTEX = 3;
     private final int vertexStride = COORDS_PER_VERTEX * 4;
 
-    public void draw(float[] mvpMatrix, float scroll) {
+    private int[] textures = new int[1];
+
+    private float texture[] = {
+            -1f, 1f,
+            -1f, -1f,
+            1f, -1f,
+            1f, 1f
+    };
+
+//    private final FloatBuffer textureBuffer;
+    static final int textureStride = COORDS_PER_VERTEX * 4;
+
+    public StarField() {
+        ByteBuffer bb = ByteBuffer.allocateDirect(squareCoords.length * 4); //TODO: squareCoords to texture
+        bb.order(ByteOrder.nativeOrder());
+        vertexBuffer = bb.asFloatBuffer();
+        vertexBuffer.put(squareCoords); //TODO: squareCoords to texture
+        vertexBuffer.position(0);
+
+        ByteBuffer dlb = ByteBuffer.allocateDirect(drawOrder.length * 2);
+
+        dlb.order(ByteOrder.nativeOrder());
+        drawListBuffer = dlb.asShortBuffer();
+        drawListBuffer.put(drawOrder);
+        drawListBuffer.position(0);
+
+        int vertexShader = GameRenderer.loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
+        int fragmentShader = GameRenderer.loadShader(GLES20.GL_VERTEX_SHADER, fragmentShaderCode);
+
+        mProgram = GLES20.glCreateProgram();
+        GLES20.glAttachShader(mProgram, vertexShader);
+        GLES20.glAttachShader(mProgram, fragmentShader);
+        GLES20.glLinkProgram(mProgram);
+    }
+
+    public void draw(float[] mvpMatrix) {
+        // Binds the texture to the polygon
         GLES20.glUseProgram(mProgram);
+
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+
         GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        int vsTextureCoord = GLES20.glGetAttribLocation(mProgram, "TextCoordin");
+
         GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, vertexBuffer);
+//        GLES20.glVertexAttribPointer(vsTextureCoord, COORDS_PER_TEXTURE, GLES20.GL_FLOAT, false, textureStride, textureBuffer);
+
+        GLES20.glEnableVertexAttribArray(vsTextureCoord);
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+
+        int fsTexture = GLES20.glGetUniformLocation(mProgram, "TexCoordOut");
+        GLES20.glUniform1i(fsTexture, 0);
 
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         GameRenderer.checkGlError("glGetUniformLocation");
@@ -110,44 +159,6 @@ public class StarField {
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 
         bitmap.recycle();
-    }
-
-    /**
-     * Add a new texture buffer to this StarField constructor
-     */
-    private int[] textures = new int[1];
-
-    private float texture[] = {
-            -1f, 1f,
-            -1f, -1f,
-            1f, -1f,
-            1f, 1f
-    };
-
-    //    private final FloatBuffer textureBuffer;
-    static final int textureStride = COORDS_PER_VERTEX * 4;
-
-    public StarField() {
-        ByteBuffer bb = ByteBuffer.allocateDirect(squareCoords.length * 4); //TODO: squareCoords to texture
-        bb.order(ByteOrder.nativeOrder());
-        vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(squareCoords); //TODO: squareCoords to texture
-        vertexBuffer.position(0);
-
-        ByteBuffer dlb = ByteBuffer.allocateDirect(drawOrder.length * 2);
-
-        dlb.order(ByteOrder.nativeOrder());
-        drawListBuffer = dlb.asShortBuffer();
-        drawListBuffer.put(drawOrder);
-        drawListBuffer.position(0);
-
-        int vertexShader = GameRenderer.loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
-        int fragmentShader = GameRenderer.loadShader(GLES20.GL_VERTEX_SHADER, fragmentShaderCode);
-
-        mProgram = GLES20.glCreateProgram();
-        GLES20.glAttachShader(mProgram, vertexShader);
-        GLES20.glAttachShader(mProgram, fragmentShader);
-        GLES20.glLinkProgram(mProgram);
     }
 
 
