@@ -11,20 +11,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         myGameView = new GameView(this);
-//        setContentView(GameView);
+        setContentView(myGameView);
     }
 
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        // This call pauses the thread, if application is memory intensive consider de-allocation
-//        myGameView.onPause();
-//    }
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        // This call resumes the thread, if de-allocated will re-allocate
-//        myGameView.onResume();
-//    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // This call pauses the thread, if application is memory intensive consider de-allocation
+        myGameView.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // This call resumes the thread, if de-allocated will re-allocate
+        myGameView.onResume();
+    }
 }
