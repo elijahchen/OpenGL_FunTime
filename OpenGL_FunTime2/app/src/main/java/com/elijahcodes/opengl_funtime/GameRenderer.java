@@ -22,18 +22,20 @@ public class GameRenderer implements GLSurfaceView.Renderer {
     public static float[] mProjectionMatrix = new float[16];
     public static float[] mViewMatrix = new float[16];
 
-//    private Starfield starfield;
+    private StarField starfield;
 
 
-    public GameRenderer(Context context) {
-//        context = gameContext;
+    public GameRenderer(Context gameContext) {
+        context = gameContext;
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-//        starfield = new Starfield();
+        starfield = new StarField();
+
+        starfield.loadTexture(R.drawable.starfield_img, context);
     }
 
     @Override
