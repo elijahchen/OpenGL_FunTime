@@ -32,7 +32,7 @@ public class StarField {
     static float squareCoords[] = {
             -1f, 1f, 0.0f, // top left
             -1f, -1f, 0.0f, // bottom left
-            1f, -1f, 0.0f, // top right
+            1f, -1f, 0.0f, // bottom right
             1f, 1f, 0.0f}; // top right
 
     private final short drawOrder[] = {
@@ -155,6 +155,7 @@ public class StarField {
             Log.d(TAG, "loadTexture: failed to load");
         } finally {
             try {
+                imagestream = null;
                 imagestream.close();
             } catch (IOException e) {
                 Log.d(TAG, "loadTexture: failed to close imageStream");
