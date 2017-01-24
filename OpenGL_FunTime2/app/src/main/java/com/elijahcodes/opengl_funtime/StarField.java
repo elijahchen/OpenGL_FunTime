@@ -61,18 +61,6 @@ public class StarField {
                     "vec2(TexCoordOut.x, TexCoordOut.y + scroll));" +
                     "}";
 
-    private final FloatBuffer vertexBuffer;
-    private final ShortBuffer drawListBuffer;
-    private final int mProgram;
-    private int mPositionHandle;
-    //    private int mColorHandle;
-    private int mMVPMatrixHandle;
-
-    static final int COORDS_PER_VERTEX = 3;
-    private final int vertexStride = COORDS_PER_VERTEX * 4;
-
-    private int[] textures = new int[1];
-
     private float texture[] = {
             -1f, 1f,
             -1f, -1f,
@@ -80,18 +68,35 @@ public class StarField {
             1f, 1f
     };
 
-    //    private final FloatBuffer textureBuffer;
+    private final FloatBuffer vertexBuffer;
+    private final FloatBuffer textureBuffer;
+    private final ShortBuffer drawListBuffer;
+    private final int mProgram;
+    private int mPositionHandle;
+    private int mColorHandle;
+
+    private int mMVPMatrixHandle;
+    static final int COORDS_PER_VERTEX = 3;
+    static final int COORDS_PER_TEXTURE = 2;
     static final int textureStride = COORDS_PER_VERTEX * 4;
+    private final int vertexStride = COORDS_PER_VERTEX * 4;
+
+    private int[] textures = new int[1];
 
     public StarField() {
-        ByteBuffer bb = ByteBuffer.allocateDirect(squareCoords.length * 4); //TODO: squareCoords to texture
+        ByteBuffer bb = ByteBuffer.allocateDirect(squareCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(squareCoords); //TODO: squareCoords to texture
+        vertexBuffer.put(squareCoords);
         vertexBuffer.position(0);
 
-        ByteBuffer dlb = ByteBuffer.allocateDirect(drawOrder.length * 2);
+        bb = ByteBuffer.allocateDirect(texture.length * 4);
+        bb.order(ByteOrder.nativeOrder());
+        textureBuffer = bb.asFloatBuffer();
+        textureBuffer.put(texture);
+        textureBuffer.position(0);
 
+        ByteBuffer dlb = ByteBuffer.allocateDirect(drawOrder.length * 2);
         dlb.order(ByteOrder.nativeOrder());
         drawListBuffer = dlb.asShortBuffer();
         drawListBuffer.put(drawOrder);
@@ -122,7 +127,7 @@ public class StarField {
         int vsTextureCoord = GLES20.glGetAttribLocation(mProgram, "TextCoordin");
 
         GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, vertexBuffer);
-//        GLES20.glVertexAttribPointer(vsTextureCoord, COORDS_PER_TEXTURE, GLES20.GL_FLOAT, false, textureStride, textureBuffer);
+        GLES20.glVertexAttribPointer(vsTextureCoord, COORDS_PER_TEXTURE, GLES20.GL_FLOAT, false, textureStride, textureBuffer);
 
         GLES20.glEnableVertexAttribArray(vsTextureCoord);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
