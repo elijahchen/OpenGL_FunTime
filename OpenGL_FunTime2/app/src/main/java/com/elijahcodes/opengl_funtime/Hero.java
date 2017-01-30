@@ -9,6 +9,10 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import static android.content.ContentValues.TAG;
 
@@ -45,7 +49,7 @@ public class Hero {
                     "uniform float posY;" +
                     "varying vec2 TexCoordOut;" +
                     "void main() {" +
-                    " gl_FragColor = texture2D(TexCoordIn, vec2,(TexCoordOut.x + posX, TexCoordOut.y + posY));"+
+                    " gl_FragColor = texture2D(TexCoordIn, vec2,(TexCoordOut.x + posX, TexCoordOut.y + posY));" +
                     "}";
 
     private float texture[] = {
@@ -57,11 +61,10 @@ public class Hero {
 
     private int[] textures = new int[1];
 
-    //TODO: create constructor to initialize the variables below
-//    private final FloatBuffer vertexBuffer;
-//    private final FloatBuffer textureBuffer;
-//    private final ShortBuffer drawListBuffer;
-//    private final int mProgram;
+    private final FloatBuffer vertexBuffer;
+    private final FloatBuffer textureBuffer;
+    private final ShortBuffer drawListBuffer;
+    private final int mProgram;
     private int mPositionHandle;
     private int mColorHandle;
     private int mMVPMatrixHandle;
@@ -103,6 +106,32 @@ public class Hero {
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 
         bitmap.recycle();
+    }
+
+    public Hero() {
+        ByteBuffer bb = ByteBuffer.allocateDirect(squareCoords.length * 4);
+        bb.order(ByteOrder.nativeOrder());
+        vertexBuffer = bb.asFloatBuffer();
+        vertexBuffer.put(squareCoords);
+        vertexBuffer.position(0);
+
+        bb = ByteBuffer.allocateDirect(texture.length * 4);
+        textureBuffer = bb.asFloatBuffer();
+        textureBuffer.put(texture);
+        textureBuffer.position(0);
+
+        ByteBuffer dlb = ByteBuffer.allocateDirect(drawOrder.length * 2);
+        dlb.order(ByteOrder.nativeOrder());
+        drawListBuffer = dlb.asShortBuffer();
+        drawListBuffer.put(drawOrder);
+        drawListBuffer.position(0);
+
+        int vertexShader = GameRenderer.loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
+        int fragmentShader = GameRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
+        mProgram = GLES20.glCreateProgram();
+        GLES20.glAttachShader(mProgram, vertexShader);
+        GLES20.glAttachShader(mProgram, fragmentShader);
+        GLES20.glLinkProgram(mProgram);
     }
 
 }
