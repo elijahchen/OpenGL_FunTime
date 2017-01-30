@@ -134,4 +134,40 @@ public class Hero {
         GLES20.glLinkProgram(mProgram);
     }
 
+    public void draw(float[] mvpMatrix, float posX, float posY) {
+        GLES20.glUseProgram(mProgram);
+
+        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        int vsTextureCoord = GLES20.glGetAttribLocation(mProgram, "TexCoordIn");
+
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+                GLES20.GL_FLOAT, false,
+                vertexStride, vertexBuffer);
+        GLES20.glVertexAttribPointer(vsTextureCoord, COORDS_PER_TEXTURE,
+                GLES20.GL_FLOAT, false,
+                textureStride, textureBuffer);
+        GLES20.glEnableVertexAttribArray(vsTextureCoord);
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+
+        int fsTexture = GLES20.glGetUniformLocation(mProgram, "TexCoordOut");
+        int fsPosX = GLES20.glGetUniformLocation(mProgram, "posX");
+        int fsPosY = GLES20.glGetUniformLocation(mProgram, "posY");
+
+        GLES20.glUniform1i(fsTexture, 0);
+        GLES20.glUniform1f(fsPosX, posX);
+        GLES20.glUniform1f(fsPosY, posY);
+
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+
+        GameRenderer.checkGlError("glGetUniformLocation");
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+        GameRenderer.checkGlError("glUniformMatrix4fv");
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES,
+                drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+    }
 }
